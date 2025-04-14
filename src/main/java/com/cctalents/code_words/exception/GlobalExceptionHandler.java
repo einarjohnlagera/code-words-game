@@ -2,24 +2,25 @@ package com.cctalents.code_words.exception;
 
 import com.cctalents.code_words.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 @ControllerAdvice
-public class GlobalExceptionHandler {
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler(NoGameFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleNotFoundException(NoGameFoundException ex) {
-        return new ErrorResponse(HttpStatus.NOT_FOUND.value(), ex.getMessage());
+    @ExceptionHandler(value = NoGameFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFoundException(Exception ex) {
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        return new ResponseEntity<>(new ErrorResponse(status.value(), ex.getMessage()), status);
     }
 
-    @ExceptionHandler({MultipleGuessLetterNotAllowedException.class,
+    @ExceptionHandler(value = {MultipleGuessLetterNotAllowedException.class,
             GameAlreadyFinishedException.class})
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleBadRequests(Exception ex) {
-        return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+    public ResponseEntity<ErrorResponse> handleBadRequests(Exception ex) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        return new ResponseEntity<>(new ErrorResponse(status.value(), ex.getMessage()), status);
 
     }
 }

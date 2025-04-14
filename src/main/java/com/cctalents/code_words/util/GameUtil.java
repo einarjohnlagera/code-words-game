@@ -8,7 +8,7 @@ import lombok.experimental.UtilityClass;
 public class GameUtil {
 
     public static String mask(String str) {
-        return str.replaceAll("[^a-zA-Z]", "_ ").trim();
+        return str.replaceAll("[a-zA-Z]", "_");
     }
 
     public static GameResponse mapFrom(Game game) {

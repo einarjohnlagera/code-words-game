@@ -59,6 +59,8 @@ public class GameService {
 
         // check if user was able to guess the word
         if (game.getWord().equals(guess)) {
+            // masked word should already show the answer
+            game.setMaskedWord(guess);
             game.setStatus(GameStatus.WON);
         } else if (guess.length() > 1) {
             throw new MultipleGuessLetterNotAllowedException();
