@@ -20,28 +20,25 @@ public class GameController {
     private final GameService service;
 
     @PostMapping
-    @JsonView(GameResponse.WithIdView.class)
+    @JsonView(GameResponse.CreateGameView.class)
     public GameResponse createGame(@RequestBody CreateGameRequest request) {
-        Game game = service.createGame(request);
-        return mapFrom(game);
+        return toGameResponse(service.createGame(request));
     }
 
     @PostMapping("/{gameId}/guess")
-    @JsonView(GameResponse.WithIdView.class)
+    @JsonView(GameResponse.GuessView.class)
     public GameResponse guessWord(@PathVariable Long gameId,
-                                  @RequestBody @Valid GameRequest request) throws NoGameFoundException {
-        Game game = service.guess(gameId, request);
-        return mapFrom(game);
+                                  @RequestBody @Valid GameRequest request) {
+        return toGameResponse(service.guess(gameId, request));
     }
 
     @GetMapping("/{gameId}")
-    @JsonView(GameResponse.GameView.class)
-    public GameResponse getGame(@PathVariable Long gameId) throws NoGameFoundException {
-        Game game = service.findGameById(gameId);
-        return mapFrom(game);
+    @JsonView(GameResponse.GameStateView.class)
+    public GameResponse getGame(@PathVariable Long gameId) {
+        return toGameResponse(service.findGameById(gameId));
     }
 
-    private GameResponse mapFrom(Game game) {
+    private GameResponse toGameResponse(Game game) {
         return GameResponse.builder()
                 .gameId(game.getId())
                 .maskedWord(GameUtil.spacesInBetween(game.getMaskedWord()))
