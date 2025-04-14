@@ -1,0 +1,8 @@
+package com.cctalents.code_words.exception;
+
+public class NoGameFoundException extends Exception {
+
+    public NoGameFoundException(Long id) {
+        super(String.format("Game not found with id %d", id));
+    }
+}
