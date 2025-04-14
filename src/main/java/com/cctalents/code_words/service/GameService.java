@@ -27,7 +27,7 @@ public class GameService {
     private final WordService wordService;
     private final GameRepository repository;
 
-    public GameResponse createGame(CreateGameRequest request) {
+    public Game createGame(CreateGameRequest request) {
         if (!StringUtils.hasLength(request.getDifficulty())) {
             request.setDifficulty(gameProperties.getDefaultDifficulty());
         }
@@ -44,24 +44,18 @@ public class GameService {
                 .remainingAttempts(remainingAttempts)
                 .player(request.getPlayer())
                 .build();
-        Long gameId = repository.save(game).getId();
-
-        return GameResponse.builder()
-                .gameId(gameId)
-                .maskedWord(maskedWord)
-                .remainingAttempts(remainingAttempts)
-                .build();
+        return repository.save(game);
     }
 
     public Game findGameById(Long gameId) {
-        return repository.findById(gameId).orElse(null);
+        return repository.findById(gameId).
+                orElseThrow(() -> new NoGameFoundException(gameId));
     }
 
-    public GameResponse guess(Long gameId, GameRequest gameRequest) throws NoGameFoundException {
+    public Game guess(Long gameId, GameRequest gameRequest) {
         String guess = gameRequest.getGuess();
-        Game game = Optional.ofNullable(findGameById(gameId))
-                .orElseThrow(() -> new NoGameFoundException(gameId));
-       validateGameStatus(game);
+        Game game = findGameById(gameId);
+        validateGameStatus(game);
 
         // check if user was able to guess the word
         if (game.getWord().equals(guess)) {
@@ -82,7 +76,7 @@ public class GameService {
                 game.setStatus(GameStatus.LOST);
             }
         }
-        return GameUtil.mapFrom(game);
+        return repository.save(game);
     }
 
     private void validateGameStatus(Game game) {
