@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface WordRepository extends ReadRepository<Word, Long> {
     List<Word> findAllByDifficulty(Difficulty difficulty);
+    Word findByName(String word);
 }

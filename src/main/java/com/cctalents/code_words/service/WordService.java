@@ -13,11 +13,15 @@ import java.util.Random;
 @RequiredArgsConstructor
 public class WordService {
 
-    private final WordRepository wordRepository;
+    private final WordRepository repository;
 
-    public String getRandomWordByDiffuculty(Difficulty difficulty) {
-        List<Word> words = wordRepository.findAllByDifficulty(difficulty);
-        return getRandomElement(words).getWord();
+    public Word getWordByName(String word) {
+        return repository.findByName(word);
+    }
+
+    public String getRandomWordByDifficulty(Difficulty difficulty) {
+        List<Word> words = repository.findAllByDifficulty(difficulty);
+        return getRandomElement(words).getName();
     }
 
     private Word getRandomElement(List<Word> words) {
