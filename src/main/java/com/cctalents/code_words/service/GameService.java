@@ -3,7 +3,6 @@ package com.cctalents.code_words.service;
 import com.cctalents.code_words.config.GameProperties;
 import com.cctalents.code_words.dto.CreateGameRequest;
 import com.cctalents.code_words.dto.GameRequest;
-import com.cctalents.code_words.dto.GameResponse;
 import com.cctalents.code_words.entity.Game;
 import com.cctalents.code_words.enums.Difficulty;
 import com.cctalents.code_words.enums.GameStatus;
@@ -17,7 +16,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.Optional;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +36,7 @@ public class GameService {
             request.setPlayer(gameProperties.getDefaultPlayer());
         }
 
-        String word = wordService.getRandomWordByDiffuculty(Difficulty.valueOf(request.getDifficulty()));
+        String word = wordService.getRandomWordByDifficulty(Difficulty.valueOf(request.getDifficulty()));
         String maskedWord = GameUtil.mask(word);
         int remainingAttempts = gameProperties.getAllowedAttempts();
         Game game = Game.builder()
@@ -62,7 +63,7 @@ public class GameService {
             // masked word should already show the answer
             game.setMaskedWord(guess);
             game.setStatus(GameStatus.WON);
-        } else if (guess.length() > 1) {
+        } else if (guess.length() == 2) {
             throw new MultipleGuessLetterNotAllowedException();
         } else if (game.getWord().contains(guess)) {
             game.setMaskedWord(unmaskCorrect(game.getMaskedWord(), game.getWord(), guess));
@@ -79,6 +80,19 @@ public class GameService {
             }
         }
         return repository.save(game);
+    }
+
+    public Game forfeit(Long gameId) {
+        Game game = findGameById(gameId);
+        game.setStatus(GameStatus.LOST);
+        return repository.save(game);
+    }
+
+    public List<Game> getTopPlayers() {
+        List<Game> leaders = repository.findAllByStatus(GameStatus.WON);
+        return leaders.stream()
+                .sorted(Comparator.comparingInt(Game::getRemainingAttempts).reversed())
+                .collect(Collectors.toList());
     }
 
     private void validateGameStatus(Game game) {
