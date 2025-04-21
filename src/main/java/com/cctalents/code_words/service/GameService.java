@@ -84,6 +84,7 @@ public class GameService {
 
     public Game forfeit(Long gameId) {
         Game game = findGameById(gameId);
+        validateGameStatus(game);
         game.setStatus(GameStatus.LOST);
         return repository.save(game);
     }
