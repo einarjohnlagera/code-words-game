@@ -20,6 +20,15 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Service class for managing game-related operations, including creating games,
+ * processing user guesses, handling forfeits, and retrieving top players.
+ * <p>
+ * This class interacts with the GameRepository for persistence, WordService for
+ * retrieving words based on difficulty, and GameProperties for configurable
+ * settings such as default difficulty and allowed attempts.
+ * </p>
+ */
 @Service
 @RequiredArgsConstructor
 public class GameService {
@@ -28,6 +37,16 @@ public class GameService {
     private final WordService wordService;
     private final GameRepository repository;
 
+    /**
+     * Creates a new game based on the provided {@link CreateGameRequest}.
+     * If the difficulty or player fields in the request are not provided,
+     * default values from the game properties will be used. The method initializes
+     * a random word based on the specified difficulty, masks it, and assigns a
+     * predefined number of remaining attempts.
+     *
+     * @param request the request object containing the player name and game difficulty
+     * @return the created game entity after being saved in the repository
+     */
     public Game createGame(CreateGameRequest request) {
         if (!StringUtils.hasLength(request.getDifficulty())) {
             request.setDifficulty(gameProperties.getDefaultDifficulty());
@@ -53,6 +72,14 @@ public class GameService {
                 orElseThrow(() -> new NoGameFoundException(gameId));
     }
 
+    /**
+     * Processes a user's guess for a game, updating the game status and masked word
+     * based on the guess. Throws an exception if an invalid guess is provided.
+     *
+     * @param gameId the unique identifier of the game
+     * @param gameRequest the request containing the guess made by the user
+     * @return the updated game state after processing the guess
+     */
     public Game guess(Long gameId, GameRequest gameRequest) {
         String guess = gameRequest.getGuess();
         Game game = findGameById(gameId);
@@ -82,6 +109,13 @@ public class GameService {
         return repository.save(game);
     }
 
+    /**
+     * Marks the game with the given identifier as forfeited by setting its status to LOST.
+     * The updated game instance is then saved in the repository and returned.
+     *
+     * @param gameId the unique identifier of the game to be forfeited
+     * @return the updated game entity with its status set to LOST
+     */
     public Game forfeit(Long gameId) {
         Game game = findGameById(gameId);
         validateGameStatus(game);
@@ -89,6 +123,14 @@ public class GameService {
         return repository.save(game);
     }
 
+    /**
+     * Retrieves a list of top players based on their game performance.
+     * It fetches all games with a status of WON and ranks them in descending
+     * order by the number of remaining attempts.
+     *
+     * @return a list of games sorted by remaining attempts in descending order,
+     *         containing only the games with a status of WON
+     */
     public List<Game> getTopPlayers() {
         List<Game> leaders = repository.findAllByStatus(GameStatus.WON);
         return leaders.stream()

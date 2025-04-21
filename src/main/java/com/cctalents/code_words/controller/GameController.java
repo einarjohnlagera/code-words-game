@@ -21,6 +21,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * GameController is responsible for handling HTTP requests related to managing game sessions.
+ * It exposes endpoints for creating a new game, making guesses, retrieving game state,
+ * forfeiting games, and fetching leaderboard information.
+ * <p>
+ * This controller delegates game-related business logic to the GameService
+ * and word-related operations to the WordService.
+ * </p>
+ */
 @RestController
 @RequestMapping("/game")
 @RequiredArgsConstructor
@@ -29,12 +38,33 @@ public class GameController {
     private final GameService service;
     private final WordService wordService;
 
+    /**
+     * Creates a new game session based on the provided request.
+     * The game initialization includes setting up a player name, game difficulty,
+     * selecting a random word based on difficulty, masking the word, and initializing
+     * the remaining attempts.
+     *
+     * @param request the object containing the game initialization parameters such as player name
+     *                and difficulty level
+     * @return the response containing the initialized game details, including the game's ID,
+     *         masked word, remaining attempts, and game status
+     */
     @PostMapping
     @JsonView(GameResponse.CreateGameView.class)
     public GameResponse createGame(@RequestBody CreateGameRequest request) {
         return toGameResponse(service.createGame(request));
     }
 
+    /**
+     * Processes the player's guess for a specific game based on the provided game ID and guess input.
+     * Updates the game state including the masked word, the number of remaining attempts, and the
+     * game status depending on whether the guess is correct, partially correct, or incorrect.
+     *
+     * @param gameId the unique identifier of the game for which the guess is being made
+     * @param request the object containing the user's guess, validated to ensure that the input is not null
+     * @return the response object representing the updated game state, including properties such as
+     *         the game's ID, updated masked word, remaining attempts, and the current game status
+     */
     @PostMapping("/{gameId}/guess")
     @JsonView(GameResponse.GuessView.class)
     public GameResponse guessWord(@PathVariable Long gameId,
@@ -42,6 +72,13 @@ public class GameController {
         return toGameResponse(service.guess(gameId, request));
     }
 
+    /**
+     * Retrieves the current state of a specific game using its unique identifier.
+     *
+     * @param gameId the unique identifier of the game to be retrieved
+     * @return the response object representing the current state of the game, including
+     *         the game's ID, masked word, remaining attempts, and game status
+     */
     @GetMapping("/{gameId}")
     @JsonView(GameResponse.GameStateView.class)
     public GameResponse getGame(@PathVariable Long gameId) {
@@ -54,6 +91,16 @@ public class GameController {
         return toGameResponse(service.forfeit(gameId));
     }
 
+    /**
+     * Retrieves a filtered list of leaderboard entries categorized by difficulty level.
+     * The leaderboard includes a limited number of top players for each difficulty, sorted
+     * by the number of remaining attempts in descending order. Only up to 5 top players are
+     * retained for each difficulty category.
+     *
+     * @return a list of {@code LeaderBoardResponse} objects representing the leaderboard
+     * data across different difficulty levels, including player names, difficulties, and
+     * remaining attempts
+     */
     @GetMapping("/leaderboards")
     @JsonView(LeaderBoardResponse.LeaderBoardsView.class)
     public List<LeaderBoardResponse> getLeaderboards() {
